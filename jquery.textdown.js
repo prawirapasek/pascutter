@@ -10,22 +10,50 @@
 
  	var defaults = {
  			speed: 500,
- 			maxheight: 132,
- 			openToggle: '<span class="icon icon-down"></span>',
- 			closeToggle: '<span class="icon icon-up"></span>'
+ 			maxHeight: 132,
+ 			openToggleText: 'Open',
+ 			closeToggleText: 'Close',
+ 			responsive: true,
+ 			toggleClass: ''
  		},
 
  		methods = {
 
- 			closeText: function() {
-
+ 			closeText: function(el, o) {
+ 				el.stop(true, true).animate({'max-height': o.maxHeight}, o.speed);
  			},
 
- 			openText: function() {
-
+ 			openText: function(el, o) {
+ 				var text = el.children();
+ 				el.stop(true, true).animate({'max-height': text.height()}, o.speed);
  			},
 
- 			toggleText: function() {
+ 			toggleText: function(el, o) {
+ 				var par = el.parent();
+ 				par.off('click', '.toggle-text');
+				par.on('click', '.toggle-text', function(){
+					var evt = $(this);
+					if ( evt.hasClass('open') ) {
+						methods.openText(el, o);
+						evt.toggleClass('open close').html(o.closeToggleText);
+					} else {
+						methods.closeText(el, o);
+						evt.toggleClass('open close').html(o.openToggleText);
+					}
+				});	
+ 			},
+
+ 			slideText: function(el, o) {
+ 				var text = el.children(),
+ 					par = el.parent();
+
+ 				if ( text.height() > o.maxHeight ) {
+ 					methods.closeText(el, o);
+ 					methods.toggleText(el, o);
+				} else {
+					$('.toggle-text').remove();
+					par.off('click', '.toggle-text');
+				}
 
  			},
 
@@ -34,17 +62,13 @@
  				var o = $.extend(defaults, options);
 
  				return this.each(function(){
+ 					var el = $(this);
 
- 					var el = $(this),
- 						slideText = el.find('.excerpt-slide-down'),
- 						textHeight = slideText.children().height();
-
- 					if ( textHeight > o.maxHeight ) {
- 						
- 					} else {
-
+ 					el.parent().append('<a href="javascript:;" class="toggle-text '+ o.toggleClass +' open">'+ o.openToggleText +'</a>');
+ 					methods.slideText(el, o);
+ 					if(o.responsive && o.responsive === true){
+ 						$(window).on('resize', function(){methods.slideText(el, o);});
  					}
-
  				});
 
  			}
@@ -53,12 +77,13 @@
 
  	$.fn.textDown = function(method) {
  		if (methods[method]) {
-	      return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+	      	return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
 	    } else if (typeof method === 'object' || !method ) {
-	      return methods.init.apply( this, arguments );
+	      	return methods.init.apply( this, arguments );
 	    } else {
-	      $.error('Method ' + method + ' does not exist on jQuery.Text Down');
+	      	$.error('Method ' + method + ' does not exist on jQuery Text Down');
 	    }
+
  	};
 
- })(jQuery)
+ })(jQuery);
